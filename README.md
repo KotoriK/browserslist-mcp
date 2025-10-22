@@ -228,6 +228,16 @@ For more details, use the `browserslist://documentation` resource or visit the [
 - **Vitest** - Testing framework
 - **pnpm** - Package manager
 
+## Examples
+
+The `examples/` directory contains:
+
+- **MCP Client Configuration** - How to configure Claude Desktop and other MCP clients
+- **Cloudflare Worker Deployment** - Deploy as a serverless function on Cloudflare Workers
+- **HTTP API Examples** - Using the Koa HTTP server
+
+See the [examples README](./examples/README.md) for more details.
+
 ## License
 
 ISC
