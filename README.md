@@ -55,6 +55,20 @@ pnpm dev:koa
 
 The server will start on port 3000 (or the port specified in the `PORT` environment variable).
 
+### As Cloudflare Worker (Serverless)
+
+Deploy to Cloudflare Workers for edge computing:
+
+```bash
+# Local development
+pnpm worker:dev
+
+# Deploy to production
+pnpm worker:deploy
+```
+
+See [Cloudflare Workers Guide](./examples/CLOUDFLARE.md) for detailed instructions.
+
 #### HTTP Endpoints
 
 - `GET /health` - Health check endpoint
@@ -228,15 +242,19 @@ For more details, use the `browserslist://documentation` resource or visit the [
 - **Vitest** - Testing framework
 - **pnpm** - Package manager
 
+## Documentation
+
+- **[WORKER.md](./WORKER.md)** - Comprehensive Cloudflare Workers guide
+- **[examples/README.md](./examples/README.md)** - MCP client configuration examples
+- **[examples/CLOUDFLARE.md](./examples/CLOUDFLARE.md)** - Quick Cloudflare deployment guide
+
 ## Examples
 
 The `examples/` directory contains:
 
 - **MCP Client Configuration** - How to configure Claude Desktop and other MCP clients
-- **Cloudflare Worker Deployment** - Deploy as a serverless function on Cloudflare Workers
+- **Cloudflare Worker Deployment** - Production-ready serverless deployment guide
 - **HTTP API Examples** - Using the Koa HTTP server
-
-See the [examples README](./examples/README.md) for more details.
 
 ## License
 
