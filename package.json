@@ -1,0 +1,48 @@
+{
+  "name": "browserslist-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for parsing browserslist queries and providing browserslist documentation",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "browserslist-mcp": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "dev:koa": "tsx src/server/koa-entry.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "pnpm build"
+  },
+  "keywords": [
+    "browserslist",
+    "mcp",
+    "model-context-protocol",
+    "browser-support",
+    "query"
+  ],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.19.0",
+  "dependencies": {
+    "@koa/router": "^14.0.0",
+    "@modelcontextprotocol/sdk": "^1.20.1",
+    "browserslist": "^4.26.3",
+    "koa": "^3.0.3",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@types/koa": "^3.0.0",
+    "@types/koa-bodyparser": "^4.3.12",
+    "@types/koa__router": "^12.0.4",
+    "@types/node": "^24.9.1",
+    "@vitest/ui": "^3.2.4",
+    "koa-bodyparser": "^4.4.1",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  }
+}
