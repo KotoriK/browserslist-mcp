@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "browserslist": {
+      "command": "node",
+      "args": ["/path/to/browserslist-mcp/dist/index.js"],
+      "env": {}
+    }
+  }
+}
