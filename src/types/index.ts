@@ -20,4 +20,5 @@ export interface BrowserslistResult {
   browsers: string[];
   query: string;
   count: number;
+  [key: string]: unknown;
 }
