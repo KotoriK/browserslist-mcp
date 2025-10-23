@@ -67,9 +67,17 @@ pnpm worker:dev
 pnpm worker:deploy
 ```
 
-See [Cloudflare Workers Guide](./examples/CLOUDFLARE.md) for detailed instructions.
+See [Cloudflare Workers Guide](./WORKER.md) for detailed instructions.
 
 #### HTTP Endpoints
+
+**MCP Protocol Endpoint:**
+- `POST /mcp` - MCP protocol endpoint (JSON-RPC over HTTP)
+  - Supports MCP initialize, list tools, list resources
+  - Compatible with MCP Client SDK
+  - Stateless mode for Cloudflare Workers
+
+**REST API Endpoints:**
 
 - `GET /health` - Health check endpoint
 - `POST /api/query` - Execute browserslist query
