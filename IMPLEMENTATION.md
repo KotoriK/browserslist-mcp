@@ -20,9 +20,11 @@ The project follows a modular architecture:
 ### Key Features Implemented
 
 ✅ **MCP Protocol Compliance**
-- Implements MCP tools specification
+- Implements MCP tools specification using latest SDK (v1.20.1)
+- Uses `McpServer` class with modern registration API
 - Provides resources for documentation
 - Uses stdio transport for client communication
+- Supports structured content responses
 
 ✅ **Browserslist Integration**
 - Query execution with full browserslist syntax support
@@ -31,7 +33,7 @@ The project follows a modular architecture:
 
 ✅ **Type Safety & Validation**
 - Complete TypeScript type definitions
-- Zod schema validation for all inputs
+- Zod 3.x schema validation for all inputs
 - Comprehensive error handling
 
 ✅ **Testing**
@@ -152,4 +154,18 @@ pnpm test
 - The project follows TypeScript best practices
 - Code is well-documented with JSDoc comments
 - Examples provided for all deployment scenarios
+- Uses Zod 3.x for compatibility with @modelcontextprotocol/sdk v1.20.1
+
+## Recent Updates
+
+### MCP SDK Migration (2025-10)
+The implementation has been updated to use the latest MCP TypeScript SDK API:
+
+- **Migrated from `Server` to `McpServer`**: Using the new high-level API that provides simpler registration methods
+- **Registration Pattern**: Changed from `setRequestHandler` to `registerTool` and `registerResource` methods
+- **Structured Content**: Tool responses now include `structuredContent` field for better client integration
+- **Zod Version**: Downgraded from 4.x to 3.x to match SDK requirements
+- **Type Safety**: Enhanced type definitions with proper index signatures for MCP protocol compliance
+
+All existing functionality is preserved, with improved code clarity and better alignment with MCP specification.
 - No security vulnerabilities detected
