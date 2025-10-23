@@ -1,12 +1,6 @@
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import {
-  CallToolRequestSchema,
-  ListResourcesRequestSchema,
-  ListToolsRequestSchema,
-  ReadResourceRequestSchema,
-} from '@modelcontextprotocol/sdk/types.js';
-import { BrowserslistQuerySchema } from '../types/index.js';
+import { z } from 'zod';
 import { executeBrowserslistQuery, getBrowserslistCoverage, getBrowserslistDefaults } from '../utils/browserslist.js';
 import { BROWSERSLIST_DOCUMENTATION, BROWSERSLIST_EXAMPLES } from '../resources/documentation.js';
 
@@ -14,208 +8,183 @@ import { BROWSERSLIST_DOCUMENTATION, BROWSERSLIST_EXAMPLES } from '../resources/
  * Create and configure the MCP server for browserslist queries
  */
 export function createBrowserslistMCPServer() {
-  const server = new Server(
+  const server = new McpServer({
+    name: 'browserslist-mcp',
+    version: '1.0.0',
+  });
+
+  /**
+   * Register query_browsers tool
+   */
+  server.registerTool(
+    'query_browsers',
     {
-      name: 'browserslist-mcp',
-      version: '1.0.0',
-    },
-    {
-      capabilities: {
-        tools: {},
-        resources: {},
+      title: 'Query Browsers',
+      description: 
+        'Execute a browserslist query to get matching browser versions. ' +
+        'Accepts standard browserslist query syntax like "last 2 versions", "> 1%", "Chrome > 90", etc.',
+      inputSchema: {
+        query: z.string().describe('Browserslist query string (e.g., "last 2 versions", "> 1%", "chrome > 90")'),
+        options: z.object({
+          env: z.string().optional().describe('Environment configuration (e.g., "production", "development")'),
+          path: z.string().optional().describe('Path to the directory containing browserslist config'),
+        }).optional(),
       },
+      outputSchema: {
+        browsers: z.array(z.string()),
+        query: z.string(),
+        count: z.number(),
+      },
+    },
+    async ({ query, options }) => {
+      try {
+        const result = executeBrowserslistQuery({ query, options });
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(result, null, 2),
+            },
+          ],
+          structuredContent: result,
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+          isError: true,
+        };
+      }
     }
   );
 
   /**
-   * List available tools
+   * Register get_defaults tool
    */
-  server.setRequestHandler(ListToolsRequestSchema, async () => {
-    return {
-      tools: [
-        {
-          name: 'query_browsers',
-          description: 
-            'Execute a browserslist query to get matching browser versions. ' +
-            'Accepts standard browserslist query syntax like "last 2 versions", "> 1%", "Chrome > 90", etc.',
-          inputSchema: {
-            type: 'object',
-            properties: {
-              query: {
-                type: 'string',
-                description: 'Browserslist query string (e.g., "last 2 versions", "> 1%", "chrome > 90")',
-              },
-              options: {
-                type: 'object',
-                properties: {
-                  env: {
-                    type: 'string',
-                    description: 'Environment configuration (e.g., "production", "development")',
-                  },
-                  path: {
-                    type: 'string',
-                    description: 'Path to the directory containing browserslist config',
-                  },
-                },
-              },
+  server.registerTool(
+    'get_defaults',
+    {
+      title: 'Get Defaults',
+      description: 'Get the default browserslist query configuration',
+      inputSchema: {},
+      outputSchema: {
+        defaults: z.string(),
+      },
+    },
+    async () => {
+      try {
+        const defaults = getBrowserslistDefaults();
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Default browserslist query: ${defaults}`,
             },
-            required: ['query'],
-          },
-        },
-        {
-          name: 'get_defaults',
-          description: 'Get the default browserslist query configuration',
-          inputSchema: {
-            type: 'object',
-            properties: {},
-          },
-        },
-        {
-          name: 'get_coverage',
-          description: 'Get global usage coverage for a list of browsers',
-          inputSchema: {
-            type: 'object',
-            properties: {
-              browsers: {
-                type: 'array',
-                items: { type: 'string' },
-                description: 'Array of browser versions (e.g., ["chrome 90", "firefox 88"])',
-              },
+          ],
+          structuredContent: { defaults },
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Error: ${error instanceof Error ? error.message : String(error)}`,
             },
-            required: ['browsers'],
-          },
-        },
-      ],
-    };
-  });
-
-  /**
-   * Handle tool calls
-   */
-  server.setRequestHandler(CallToolRequestSchema, async (request) => {
-    const { name, arguments: args } = request.params;
-
-    try {
-      switch (name) {
-        case 'query_browsers': {
-          const input = BrowserslistQuerySchema.parse(args);
-          const result = executeBrowserslistQuery(input);
-          
-          return {
-            content: [
-              {
-                type: 'text',
-                text: JSON.stringify(result, null, 2),
-              },
-            ],
-          };
-        }
-
-        case 'get_defaults': {
-          const defaults = getBrowserslistDefaults();
-          
-          return {
-            content: [
-              {
-                type: 'text',
-                text: `Default browserslist query: ${defaults}`,
-              },
-            ],
-          };
-        }
-
-        case 'get_coverage': {
-          if (!args || typeof args !== 'object' || !('browsers' in args)) {
-            throw new Error('browsers parameter is required');
-          }
-          const browsers = args.browsers as string[];
-          if (!Array.isArray(browsers)) {
-            throw new Error('browsers must be an array');
-          }
-          
-          const coverage = getBrowserslistCoverage(browsers);
-          
-          return {
-            content: [
-              {
-                type: 'text',
-                text: JSON.stringify(coverage, null, 2),
-              },
-            ],
-          };
-        }
-
-        default:
-          throw new Error(`Unknown tool: ${name}`);
+          ],
+          isError: true,
+        };
       }
-    } catch (error) {
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Error: ${error instanceof Error ? error.message : String(error)}`,
-          },
-        ],
-        isError: true,
-      };
     }
-  });
+  );
 
   /**
-   * List available resources
+   * Register get_coverage tool
    */
-  server.setRequestHandler(ListResourcesRequestSchema, async () => {
-    return {
-      resources: [
+  server.registerTool(
+    'get_coverage',
+    {
+      title: 'Get Coverage',
+      description: 'Get global usage coverage for a list of browsers',
+      inputSchema: {
+        browsers: z.array(z.string()).describe('Array of browser versions (e.g., ["chrome 90", "firefox 88"])'),
+      },
+      outputSchema: {
+        coverage: z.number(),
+      },
+    },
+    async ({ browsers }) => {
+      try {
+        const coverage = getBrowserslistCoverage(browsers);
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(coverage, null, 2),
+            },
+          ],
+          structuredContent: coverage,
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+          isError: true,
+        };
+      }
+    }
+  );
+
+  /**
+   * Register browserslist documentation resource
+   */
+  server.registerResource(
+    'documentation',
+    'browserslist://documentation',
+    {
+      title: 'Browserslist Query Documentation',
+      description: 'Comprehensive guide on how to write browserslist queries',
+      mimeType: 'text/markdown',
+    },
+    async (uri) => ({
+      contents: [
         {
-          uri: 'browserslist://documentation',
-          name: 'Browserslist Query Documentation',
-          description: 'Comprehensive guide on how to write browserslist queries',
+          uri: uri.href,
           mimeType: 'text/markdown',
-        },
-        {
-          uri: 'browserslist://examples',
-          name: 'Browserslist Query Examples',
-          description: 'Common browserslist query examples with descriptions',
-          mimeType: 'application/json',
+          text: BROWSERSLIST_DOCUMENTATION,
         },
       ],
-    };
-  });
+    })
+  );
 
   /**
-   * Handle resource reads
+   * Register browserslist examples resource
    */
-  server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
-    const { uri } = request.params;
-
-    switch (uri) {
-      case 'browserslist://documentation':
-        return {
-          contents: [
-            {
-              uri,
-              mimeType: 'text/markdown',
-              text: BROWSERSLIST_DOCUMENTATION,
-            },
-          ],
-        };
-
-      case 'browserslist://examples':
-        return {
-          contents: [
-            {
-              uri,
-              mimeType: 'application/json',
-              text: JSON.stringify(BROWSERSLIST_EXAMPLES, null, 2),
-            },
-          ],
-        };
-
-      default:
-        throw new Error(`Unknown resource: ${uri}`);
-    }
-  });
+  server.registerResource(
+    'examples',
+    'browserslist://examples',
+    {
+      title: 'Browserslist Query Examples',
+      description: 'Common browserslist query examples with descriptions',
+      mimeType: 'application/json',
+    },
+    async (uri) => ({
+      contents: [
+        {
+          uri: uri.href,
+          mimeType: 'application/json',
+          text: JSON.stringify(BROWSERSLIST_EXAMPLES, null, 2),
+        },
+      ],
+    })
+  );
 
   return server;
 }
